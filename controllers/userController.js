@@ -42,11 +42,29 @@ exports.deleteUser = async (req, res) => {
     const VideoView = require("../models/VideoView")
     const CouponClaim = require("../models/CouponClaim")
     
+    // 徹底刪除：連同觀看紀錄、領取紀錄與用戶本身
     await VideoView.deleteMany({ userId: id })
     await CouponClaim.deleteMany({ userId: id })
     await User.findByIdAndDelete(id)
     
-    res.json({ message: "User deleted" })
+    res.json({ message: "User and all associated records deleted" })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: error.message })
+  }
+}
+
+exports.resetUser = async (req, res) => {
+  try {
+    const { id } = req.params
+    const VideoView = require("../models/VideoView")
+    const CouponClaim = require("../models/CouponClaim")
+    
+    // 重置：僅刪除紀錄，保留用戶資料
+    await VideoView.deleteMany({ userId: id })
+    await CouponClaim.deleteMany({ userId: id })
+    
+    res.json({ message: "User progress reset successful" })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: error.message })
