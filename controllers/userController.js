@@ -25,3 +25,30 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
+
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 })
+    res.json(users)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: error.message })
+  }
+}
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params
+    const VideoView = require("../models/VideoView")
+    const CouponClaim = require("../models/CouponClaim")
+    
+    await VideoView.deleteMany({ userId: id })
+    await CouponClaim.deleteMany({ userId: id })
+    await User.findByIdAndDelete(id)
+    
+    res.json({ message: "User deleted" })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: error.message })
+  }
+}
