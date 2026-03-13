@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const UserSchema = new mongoose.Schema({
   lineUserId: String,
   name: String,
+  pictureUrl: String,
   createdAt: {
     type: Date,
     default: Date.now

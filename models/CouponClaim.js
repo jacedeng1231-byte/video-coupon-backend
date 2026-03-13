@@ -11,10 +11,18 @@ const CouponClaimSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Coupon"
   },
+  fromVideoId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Video"
+  },
 
   claimedAt: {
     type: Date,
     default: Date.now
+  },
+  isUsed: {
+    type: Boolean,
+    default: false
   }
 
 })

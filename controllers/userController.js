@@ -2,15 +2,21 @@ const User = require("../models/User")
 
 exports.login = async (req, res) => {
   try {
-    const { lineUserId, name } = req.body
+    const { lineUserId, name, pictureUrl } = req.body
 
     let user = await User.findOne({ lineUserId })
 
     if (!user) {
       user = await User.create({
         lineUserId,
-        name
+        name,
+        pictureUrl
       })
+    } else {
+      // 每次登入都更新一下名字與大頭貼，確保同步
+      user.name = name
+      user.pictureUrl = pictureUrl
+      await user.save()
     }
 
     res.json(user)

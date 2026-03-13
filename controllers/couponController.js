@@ -23,7 +23,7 @@ exports.createCoupon = async (req, res) => {
 
 exports.claimCoupon = async (req, res) => {
     try {
-        const { userId, couponId } = req.body
+        const { userId, couponId, fromVideoId } = req.body
 
         const existing = await CouponClaim.findOne({
             userId,
@@ -31,15 +31,56 @@ exports.claimCoupon = async (req, res) => {
         })
 
         if (existing) {
-            return res.json({ message: "Already claimed" })
+            return res.status(400).json({ message: "Already claimed" })
         }
 
         const claim = await CouponClaim.create({
             userId,
-            couponId
+            couponId,
+            fromVideoId
         })
 
         res.json(claim)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: error.message })
+    }
+}
+
+exports.useCoupon = async (req, res) => {
+    try {
+        const { userId, couponId } = req.body
+
+        // 1. 查找領取記錄
+        const claim = await CouponClaim.findOne({ userId, couponId }).populate("couponId")
+        if (!claim) {
+            return res.status(404).json({ message: "Coupon not found in your collection" })
+        }
+
+        if (claim.isUsed) {
+            return res.status(400).json({ message: "Coupon already used" })
+        }
+
+        const coupon = claim.couponId
+
+        // 2. 檢查過期
+        if (coupon.expireDate && new Date(coupon.expireDate) < new Date()) {
+            return res.status(400).json({ message: "Coupon expired" })
+        }
+
+        // 3. 檢查使用上限
+        if (coupon.maxUse > 0 && coupon.usedCount >= coupon.maxUse) {
+            return res.status(400).json({ message: "Coupon usage limit reached" })
+        }
+
+        // 4. 更新狀態
+        claim.isUsed = true
+        await claim.save()
+
+        coupon.usedCount += 1
+        await coupon.save()
+
+        res.json({ message: "Coupon used successfully", claim })
     } catch (error) {
         console.error(error)
         res.status(500).json({ message: error.message })

@@ -8,7 +8,11 @@ const CouponSchema = new mongoose.Schema({
 
   expireDate: Date,
 
-  maxUse: Number
+  maxUse: Number,
+  usedCount: {
+    type: Number,
+    default: 0
+  }
 
 })
 
