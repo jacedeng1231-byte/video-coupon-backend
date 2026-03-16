@@ -3,7 +3,10 @@ const CouponClaim = require("../models/CouponClaim")
 
 exports.getCoupons = async (req, res) => {
     try {
-        const coupons = await Coupon.find()
+        const coupons = await Coupon.find().lean()
+        for (const coupon of coupons) {
+            coupon.issuedCount = await CouponClaim.countDocuments({ couponId: coupon._id })
+        }
         res.json(coupons)
     } catch (error) {
         console.error(error)

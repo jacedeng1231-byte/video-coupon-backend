@@ -3,6 +3,7 @@ const router = express.Router()
 
 const videoController = require("../controllers/videoController")
 
+router.get("/latest", videoController.getLatestVideo)
 router.get("/", videoController.getVideos)
 router.post("/view", videoController.recordView)
 

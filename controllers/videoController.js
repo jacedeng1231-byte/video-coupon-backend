@@ -43,6 +43,43 @@ exports.getVideos = async (req, res) => {
     }
 }
 
+exports.getLatestVideo = async (req, res) => {
+    try {
+        const { userId } = req.query
+        const video = await Video.findOne().sort({ _id: -1 }).populate("rewardCoupon")
+
+        if (!video) {
+            return res.json(null)
+        }
+
+        if (!userId) {
+            const videoObj = video.toObject()
+            videoObj.totalViews = await VideoView.countDocuments({ videoId: video._id })
+            videoObj.totalClaims = await CouponClaim.countDocuments({ fromVideoId: video._id })
+            return res.json(videoObj)
+        }
+
+        // Get watched and claimed status for this user
+        const isWatched = await VideoView.exists({ userId, videoId: video._id })
+        
+        let isClaimed = false
+        const claimedCoupons = await CouponClaim.find({ userId })
+        isClaimed = claimedCoupons.some(c => 
+            c.fromVideoId?.toString() === video._id.toString() || 
+            (video.rewardCoupon && c.couponId.toString() === video.rewardCoupon._id.toString())
+        )
+
+        const videoWithStatus = video.toObject()
+        videoWithStatus.isWatched = !!isWatched
+        videoWithStatus.isClaimed = isClaimed
+
+        res.json(videoWithStatus)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: error.message })
+    }
+}
+
 
 exports.recordView = async (req, res) => {
     try {
